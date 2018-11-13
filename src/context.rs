@@ -345,6 +345,23 @@ impl<N: Name> Context<N> {
         self.next += other.next;
         ContextChange { delta, sacreds }
     }
+
+    /// Remove detours in substitution table
+    pub fn reduct_substitution(&mut self) {
+        let mut ret = HashMap::new();
+        for (k, v) in &self.substitution {
+            let mut v = v;
+            while let Type::Variable(k2) = v {
+                if let Some(v2) = self.substitution.get(&k2) {
+                    v = v2;
+                } else {
+                    panic!("type not resolved in subst reduction")
+                }
+            }
+            ret.insert(*k, v.clone());
+        }
+        self.substitution = ret;
+    }
 }
 
 /// Allow types to be reified for use in a different context. See [`Context::merge`].
